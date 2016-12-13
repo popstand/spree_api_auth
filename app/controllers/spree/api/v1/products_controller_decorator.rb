@@ -30,6 +30,9 @@ module Spree
           end
 
           if @products.present?
+            # Order products from newest to oldest
+            @products = @products.order("created_at DESC")
+
             # Filter products by gender
             if params.has_key?(:gender)
               if params[:gender] == "male"
