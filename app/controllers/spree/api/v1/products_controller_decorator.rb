@@ -14,8 +14,8 @@ module Spree
           if params.has_key?(:q)
             @products = Spree::Product.all
           elsif params.has_key?(:in_taxons)
-              taxon_ids = params[:in_taxons].split(',').map(&:to_i)
-              @products = Spree::Product.all.in_taxons(taxon_ids)
+            taxon_ids = params[:in_taxons].split(',').map(&:to_i)
+            @products = params.has_key?(:q) ? @products.in_taxons(taxon_ids) : Spree::Product.all.in_taxons(taxon_ids)
           else
             if (selected_sizes = current_api_user.preferences["selected_sizes"]).present?
               product_ids = []
