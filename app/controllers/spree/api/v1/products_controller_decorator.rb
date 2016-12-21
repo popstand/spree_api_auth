@@ -13,6 +13,9 @@ module Spree
 
           if params.has_key?(:q)
             @products = Spree::Product.all
+          elsif params.has_key?(:in_taxons)
+              taxon_ids = params[:in_taxons].split(',').map(&:to_i)
+              @products = Spree::Product.all.in_taxons(taxon_ids)
           else
             if (selected_sizes = current_api_user.preferences["selected_sizes"]).present?
               product_ids = []
@@ -55,13 +58,6 @@ module Spree
             #  for the filter to trigger
             if params.has_key?(:price_floor) and params.has_key?(:price_ceiling)
               @products = @products.price_between(params[:price_floor], params[:price_ceiling])
-            end
-
-            # Only get products from taxon (category) IDs
-            # in params, if they exists
-            if params.has_key?(:in_taxons)
-              taxon_ids = params[:in_taxons].split(',').map(&:to_i)
-              @products = @products.in_taxons(taxon_ids)
             end
 
             # Filter products by their option types (i.e., 'mens-basic-sizes')
