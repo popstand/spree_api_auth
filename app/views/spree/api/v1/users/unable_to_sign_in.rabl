@@ -1,3 +1,3 @@
 object false
 node(:status) { "failed" }
-node(:message) { "Your email or password is invalid. Please try again." }
+node(:error) { "Your email or password is invalid. Please try again." }
