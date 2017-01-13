@@ -67,7 +67,7 @@ module Spree
         # /api/v1/products/:id/unauthorized
         def unauthorized_product_show
           @current_api_user = nil
-          @product = find_product(params[:id])
+          @product = Spree::Product.find(params[:id])
           expires_in 15.minutes, :public => true
           headers['Surrogate-Control'] = "max-age=#{15.minutes}"
           headers['Surrogate-Key'] = "product_id=1"
