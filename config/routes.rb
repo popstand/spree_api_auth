@@ -19,6 +19,9 @@ Spree::Core::Engine.add_routes do
       # Adding and removing favorite products.
       post 'products/:id/add_favorite', to: 'products#add_favorite'
       post 'products/:id/remove_favorite', to: 'products#remove_favorite'
+      get 'products/:id/unauthorized', to: 'products#unauthorized_product_show'
+
+      get 'products/unauthorized', to: 'products#unauthorized_products'
 
       # Trending products, includes:
       #  - Hitting / pinging a product
