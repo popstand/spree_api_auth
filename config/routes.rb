@@ -22,6 +22,7 @@ Spree::Core::Engine.add_routes do
       get 'products/:id/unauthorized', to: 'products#unauthorized_product_show'
 
       get 'products/unauthorized', to: 'products#unauthorized_products'
+      get 'taxonomies/:id/taxons/unauthorized', to: 'taxons#unauthorized_taxons'
 
       # Trending products, includes:
       #  - Hitting / pinging a product

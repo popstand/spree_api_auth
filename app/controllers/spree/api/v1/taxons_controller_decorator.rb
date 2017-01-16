@@ -3,6 +3,8 @@ module Spree
     module V1
 
       TaxonsController.class_eval do
+        before_action :authenticate_user, :except => [:unauthorized_taxons]
+
         # Allow for users to follow brands. Since
         # brands  are represented  by taxons,  we
         # join users to taxons.
@@ -27,15 +29,14 @@ module Spree
           render "spree/api/v1/shared/success", status: 200
         end
 
-
         def index
           if taxonomy
-            @taxons = taxonomy.root.children
+            @taxons = taxonomy.root.children.order(position: :desc)
           else
             if params[:ids]
-              @taxons = Spree::Taxon.includes(:children).accessible_by(current_ability, :read).where(id: params[:ids].split(','))
+              @taxons = Spree::Taxon.includes(:children).accessible_by(current_ability, :read).where(id: params[:ids].split(',')).order(position: :desc)
             else
-              @taxons = Spree::Taxon.includes(:children).accessible_by(current_ability, :read).order(:taxonomy_id, :lft).ransack(params[:q]).result
+              @taxons = Spree::Taxon.includes(:children).accessible_by(current_ability, :read).order(position: :desc).ransack(params[:q]).result
             end
           end
 
@@ -43,8 +44,17 @@ module Spree
           @taxons = @taxons.page(params[:page]).per(params[:per_page])
           respond_with(@taxons)
         end
-      end
 
+        def unauthorized_taxons
+          if params[:id]
+            @taxons = Spree::Taxonomy.find(params[:id]).root.children.order(position: :desc)
+          end
+
+          @current_api_user = nil
+          @taxons = @taxons.page(params[:page]).per(params[:per_page])
+          respond_with(@taxons)
+        end
+      end
     end
   end
 end
