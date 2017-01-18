@@ -7,13 +7,24 @@ module Spree
 
         # /api/v1/products/unauthorized/?per_page=12&page=1
         def unauthorized_products
-          @products = Spree::Product.all if params.has_key?(:q)
+          if params.has_key?(:q)
+            product_ids = []
+            product_ids << Spree::Product.all.in_name_or_description(params[:q]).pluck(:id)
+
+            if (brands_retailers = Spree::Taxon.where("name ILIKE ?", "%#{params[:q]}%")).present?
+              brands_retailers.each do |br|
+                product_ids.concat(br.products.pluck(:id).uniq)
+              end
+            end
+
+            @products = Spree::Product.find(product_ids)
+          else
+            @products = Spree::Product.all unless params.has_key?(:in_taxons)
+          end
 
           if params.has_key?(:in_taxons)
             taxon_ids = params[:in_taxons].split(',').map(&:to_i)
             @products = params.has_key?(:q) ? @products.in_taxons(taxon_ids) : Spree::Product.all.in_taxons(taxon_ids)
-          else
-            @products = Spree::Product.all
           end
 
           if @products.present?
@@ -30,12 +41,6 @@ module Spree
                 @products = @products.in_taxons(8)
               end
             end
-
-            # Filter products by name or description
-            if params.has_key?(:q)
-              @products = @products.in_name_or_description(params[:q])
-            end
-
 
             # Filter products  by  price. Both  parameters
             #  ('price_floor', 'price_ceiling are required
@@ -80,12 +85,26 @@ module Spree
           # then if no search query
           # we build a collection based on the users set prefernces
           # if user has no preferences set we grab all products
-          @products = Spree::Product.all if params.has_key?(:q)
+
+          if params.has_key?(:q)
+            product_ids = []
+            product_ids << Spree::Product.all.in_name_or_description(params[:q]).pluck(:id)
+
+            if (brands_retailers = Spree::Taxon.where("name ILIKE ?", "%#{params[:q]}%")).present?
+              brands_retailers.each do |br|
+                product_ids.concat(br.products.pluck(:id))
+              end
+            end
+
+            @products = Spree::Product.find(product_ids.uniq)
+          end
 
           if params.has_key?(:in_taxons)
             taxon_ids = params[:in_taxons].split(',').map(&:to_i)
             @products = params.has_key?(:q) ? @products.in_taxons(taxon_ids) : Spree::Product.all.in_taxons(taxon_ids)
-          elsif (selected_sizes = current_api_user.preferences["selected_sizes"]).present?
+          end
+
+          if (selected_sizes = current_api_user.preferences["selected_sizes"]).present?
             product_ids = []
             selected_sizes.keys.each do |taxon|
               selected_sizes[taxon].keys.each do |option_type|
@@ -95,8 +114,6 @@ module Spree
               end
             end
             @products = Spree::Product.where(id: product_ids.uniq)
-          else
-            @products = Spree::Product.all
           end
 
           if @products.present?
@@ -113,12 +130,6 @@ module Spree
                 @products = @products.in_taxons(8)
               end
             end
-
-            # Filter products by name or description
-            if params.has_key?(:q)
-              @products = @products.in_name_or_description(params[:q])
-            end
-
 
             # Filter products  by  price. Both  parameters
             #  ('price_floor', 'price_ceiling are required
