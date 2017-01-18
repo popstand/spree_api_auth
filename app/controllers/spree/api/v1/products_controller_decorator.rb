@@ -9,15 +9,15 @@ module Spree
         def unauthorized_products
           if params.has_key?(:q)
             product_ids = []
-            product_ids << Spree::Product.all.in_name_or_description(params[:q]).pluck(:id)
+            product_ids.concat(Spree::Product.all.in_name_or_description(params[:q]).pluck(:id))
 
             if (brands_retailers = Spree::Taxon.where("name ILIKE ?", "%#{params[:q]}%")).present?
               brands_retailers.each do |br|
-                product_ids.concat(br.products.pluck(:id).uniq)
+                product_ids.concat(br.products.pluck(:id))
               end
             end
 
-            @products = Spree::Product.find(product_ids)
+            @products = Spree::Product.where(id: product_ids.uniq)
           else
             @products = Spree::Product.all unless params.has_key?(:in_taxons)
           end
@@ -88,7 +88,7 @@ module Spree
 
           if params.has_key?(:q)
             product_ids = []
-            product_ids << Spree::Product.all.in_name_or_description(params[:q]).pluck(:id)
+            product_ids.concat(Spree::Product.all.in_name_or_description(params[:q]).pluck(:id))
 
             if (brands_retailers = Spree::Taxon.where("name ILIKE ?", "%#{params[:q]}%")).present?
               brands_retailers.each do |br|
@@ -96,25 +96,27 @@ module Spree
               end
             end
 
-            @products = Spree::Product.find(product_ids.uniq)
+            @products = Spree::Product.where(id: product_ids.uniq)
           end
 
           if params.has_key?(:in_taxons)
             taxon_ids = params[:in_taxons].split(',').map(&:to_i)
             @products = params.has_key?(:q) ? @products.in_taxons(taxon_ids) : Spree::Product.all.in_taxons(taxon_ids)
+          else
+            @products = Spree::Product.all unless params.has_key?(:q)
           end
 
-          if (selected_sizes = current_api_user.preferences["selected_sizes"]).present?
-            product_ids = []
-            selected_sizes.keys.each do |taxon|
-              selected_sizes[taxon].keys.each do |option_type|
-                selected_sizes[taxon][option_type].each do |option_value|
-                  product_ids.concat(Spree::Product.with_option_value(option_type, option_value).in_taxons(taxon.to_i).pluck(:id))
-                end
-              end
-            end
-            @products = Spree::Product.where(id: product_ids.uniq)
-          end
+          #if (selected_sizes = current_api_user.preferences["selected_sizes"]).present?
+          #  product_ids = []
+          #  selected_sizes.keys.each do |taxon|
+          #    selected_sizes[taxon].keys.each do |option_type|
+          #      selected_sizes[taxon][option_type].each do |option_value|
+          #        product_ids.concat(Spree::Product.with_option_value(option_type, option_value).in_taxons(taxon.to_i).pluck(:id))
+          #      end
+          #    end
+          #  end
+          #  @products = Spree::Product.where(id: product_ids.uniq)
+          #end
 
           if @products.present?
             # Order products from newest to oldest
