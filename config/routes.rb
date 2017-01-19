@@ -13,15 +13,15 @@ Spree::Core::Engine.add_routes do
       end
 
       # Following and unfollowing brands.
-      post 'taxons/:id/follow', to: 'taxons#follow'
+      post 'taxons/:id/follow',   to: 'taxons#follow'
       post 'taxons/:id/unfollow', to: 'taxons#unfollow'
 
       # Adding and removing favorite products.
-      post 'products/:id/add_favorite', to: 'products#add_favorite'
-      post 'products/:id/remove_favorite', to: 'products#remove_favorite'
-      get 'products/:id/unauthorized', to: 'products#unauthorized_product_show'
-
-      get 'products/unauthorized', to: 'products#unauthorized_products'
+      post 'products/:id/add_favorite',         to: 'products#add_favorite'
+      post 'products/:id/remove_favorite',      to: 'products#remove_favorite'
+      get 'products/:id/unauthorized',          to: 'products#unauthorized_product_show'
+      get 'super_sale_pins/:id',                to: 'products#super_sale_pins'
+      get 'products/unauthorized',              to: 'products#unauthorized_products'
       get 'taxonomies/:id/taxons/unauthorized', to: 'taxons#unauthorized_taxons'
 
       # Trending products, includes:

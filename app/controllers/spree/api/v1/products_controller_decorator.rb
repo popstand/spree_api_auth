@@ -3,7 +3,11 @@ module Spree
     module V1
 
       ProductsController.class_eval do
-        before_action :authenticate_user, :except => [:unauthorized_products, :unauthorized_product_show, :trending]
+        before_action :authenticate_user, :except => [:unauthorized_products, :unauthorized_product_show, :trending, :super_sale_pins]
+
+        def super_sale_pins
+          @pins = Pin.find(params[:id])
+        end
 
         # /api/v1/products/unauthorized/?per_page=12&page=1
         def unauthorized_products
