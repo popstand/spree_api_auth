@@ -106,20 +106,24 @@ module Spree
               @products = Spree::Product.all unless params.has_key?(:q)
             end
           else
-            if (selected_sizes = current_api_user.preferences["selected_sizes"]).present?
-              product_ids = []
-              selected_sizes.keys.each do |taxon|
-                selected_sizes[taxon].keys.each do |option_type|
-                  selected_sizes[taxon][option_type].each do |option_value|
-                    product_ids.concat(Spree::Product.with_option_value(option_type, option_value).in_taxons(taxon.to_i).pluck(:id))
+            if params.has_key?(:gender) or params.has_key?(:price_floor) or params.has_key?(:price_ceiling) or params.has_key?(:option_type) or params.has_key?(:option_value)
+              @products = Spree::Product.all
+            else
+              if (selected_sizes = current_api_user.preferences["selected_sizes"]).present?
+                product_ids = []
+                selected_sizes.keys.each do |taxon|
+                  selected_sizes[taxon].keys.each do |option_type|
+                    selected_sizes[taxon][option_type].each do |option_value|
+                      product_ids.concat(Spree::Product.with_option_value(option_type, option_value).in_taxons(taxon.to_i).pluck(:id))
+                    end
                   end
                 end
+                @products = Spree::Product.where(id: product_ids.uniq)
+              else
+                @products = Spree::Product.all
               end
-              @products = Spree::Product.where(id: product_ids.uniq)
-            else
-              @products = Spree::Product.all
             end
-          end              
+          end
 
           if @products.present?
             # Order products from newest to oldest
