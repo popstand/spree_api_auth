@@ -8,16 +8,21 @@ module Spree
         # /api/v1/products/unauthorized/?per_page=12&page=1
         def unauthorized_products
           if params.has_key?(:q)
-            product_ids = []
-            product_ids.concat(Spree::Product.all.in_name_or_description(params[:q]).pluck(:id))
+            brand_retailer_product_ids = []
+            related_product_ids = Spree::Product.all.in_name_or_description(params[:q]).pluck(:id)
 
-            if (brands_retailers = Spree::Taxon.where("name ILIKE ?", "%#{params[:q]}%")).present?
-              brands_retailers.each do |br|
-                product_ids.concat(br.products.pluck(:id))
+            unless (query = prepare_words(params[:q])) == ['']
+              query.each do |q|
+                if (brands_retailers = Spree::Taxon.where("name ILIKE ?", "%#{q}%")).present?
+                  brands_retailers.each do |br|
+                    brand_retailer_product_ids.concat(br.products.pluck(:id))
+                  end
+                end
               end
             end
+            brand_retailer_product_ids = brand_retailer_product_ids.concat(related_product_ids)
 
-            @products = Spree::Product.where(id: product_ids.uniq)
+            brand_retailer_product_ids.blank? ? @products = Spree::Product.all : @products = Spree::Product.where(id: brand_retailer_product_ids.uniq)
           else
             @products = Spree::Product.all unless params.has_key?(:in_taxons)
           end
@@ -28,18 +33,13 @@ module Spree
           end
 
           if @products.present?
-            # Order products from newest to oldest
-            @products = @products.order("created_at DESC")
-
             # Filter products by gender
             if params.has_key?(:gender)
-              if params[:gender] == "male"
-                # 7 is the Male parent taxon
-                @products = @products.in_taxons(7)
-              else
-                # 8 is the Female parent taxon
-                @products = @products.in_taxons(8)
-              end
+              # 7 is the Male parent taxon
+              @products = @products.in_taxons(7) if params[:gender] == "male"
+
+              # 8 is the Female parent taxon
+              @products = @products.in_taxons(8) if params[:gender] == "female"
             end
 
             # Filter products  by  price. Both  parameters
@@ -58,7 +58,7 @@ module Spree
           end
 
           # Pagination
-          @products = @products.distinct.page(params[:page]).per(params[:per_page])
+          @products = @products.page(params[:page]).per(params[:per_page])
           @current_api_user = nil
 
           # Set cache invalidation
@@ -87,23 +87,26 @@ module Spree
           # if user has no preferences set we grab all products
           if params.has_key?(:in_taxons) or params.has_key?(:q)
             if params.has_key?(:q)
-              product_ids = []
-              product_ids.concat(Spree::Product.all.in_name_or_description(params[:q]).pluck(:id))
+              brand_retailer_product_ids = []
+              related_product_ids = Spree::Product.all.in_name_or_description(params[:q]).pluck(:id)
 
-              if (brands_retailers = Spree::Taxon.where("name ILIKE ?", "%#{params[:q]}%")).present?
-                brands_retailers.each do |br|
-                  product_ids.concat(br.products.pluck(:id))
+              unless (query = prepare_words(params[:q])) == ['']
+                query.each do |q|
+                  if (brands_retailers = Spree::Taxon.where("name ILIKE ?", "%#{q}%")).present?
+                    brands_retailers.each do |br|
+                      brand_retailer_product_ids.concat(br.products.pluck(:id))
+                    end
+                  end
                 end
               end
+              brand_retailer_product_ids = brand_retailer_product_ids.concat(related_product_ids)
 
-              @products = Spree::Product.where(id: product_ids.uniq)
+              brand_retailer_product_ids.blank? ? @products = Spree::Product.all : @products = Spree::Product.where(id: brand_retailer_product_ids.uniq)
             end
 
             if params.has_key?(:in_taxons)
               taxon_ids = params[:in_taxons].split(',').map(&:to_i)
               @products = params.has_key?(:q) ? @products.in_taxons(taxon_ids) : Spree::Product.all.in_taxons(taxon_ids)
-            else
-              @products = Spree::Product.all unless params.has_key?(:q)
             end
           else
             if params.has_key?(:gender) or params.has_key?(:price_floor) or params.has_key?(:price_ceiling) or params.has_key?(:option_type) or params.has_key?(:option_value)
@@ -126,18 +129,13 @@ module Spree
           end
 
           if @products.present?
-            # Order products from newest to oldest
-            @products = @products.order("created_at DESC")
-
             # Filter products by gender
             if params.has_key?(:gender)
-              if params[:gender] == "male"
-                # 7 is the Male parent taxon
-                @products = @products.in_taxons(7)
-              else
-                # 8 is the Female parent taxon
-                @products = @products.in_taxons(8)
-              end
+              # 7 is the Male parent taxon
+              @products = @products.in_taxons(7) if params[:gender] == "male"
+
+              # 8 is the Female parent taxon
+              @products = @products.in_taxons(8) if params[:gender] == "female"
             end
 
             # Filter products  by  price. Both  parameters
@@ -156,7 +154,7 @@ module Spree
           end
 
           # Pagination
-          @products = @products.distinct.page(params[:page]).per(params[:per_page])
+          @products = @products.page(params[:page]).per(params[:per_page])
           @current_api_user = current_api_user
 
           # Set cache invalidation
@@ -216,6 +214,13 @@ module Spree
           render "spree/api/v1/shared/success", status: 200
         end
 
+        # Produce an array of keywords for use in scopes.
+        # Always return array with at least an empty string to avoid SQL errors
+        def prepare_words(words)
+          return [''] if words.blank?
+          a = words.split(/[,\s]/).map(&:strip)
+          a.any? ? a : ['']
+        end
       end
     end
   end
