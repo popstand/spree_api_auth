@@ -194,7 +194,8 @@ module Spree
         end
 
         def trending
-          @products = Spree::Product.most_hit(1.month.ago, 20).all
+          @products = Spree::Product.most_hit(1.month.ago, nil)
+          @products = @products.page(params[:page]).per(params[:per_page])
 
           expires_in 15.minutes, :public => true
           headers['Surrogate-Control'] = "max-age=#{15.minutes}"
