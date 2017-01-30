@@ -11,15 +11,12 @@ module Spree
             brand_retailer_product_ids = []
             related_product_ids = Spree::Product.all.in_name_or_description(params[:q]).pluck(:id)
 
-            unless (query = prepare_words(params[:q])) == ['']
-              query.each do |q|
-                if (brands_retailers = Spree::Taxon.where("name ILIKE ?", "%#{q}%")).present?
-                  brands_retailers.each do |br|
-                    brand_retailer_product_ids.concat(br.products.pluck(:id))
-                  end
-                end
+            if (brands_retailers = Spree::Taxon.where("name ILIKE ?", "%#{parmas[:q]}%")).present?
+              brands_retailers.each do |br|
+                brand_retailer_product_ids.concat(br.products.pluck(:id))
               end
             end
+
             brand_retailer_product_ids = brand_retailer_product_ids.concat(related_product_ids)
 
             brand_retailer_product_ids.blank? ? @products = Spree::Product.all : @products = Spree::Product.where(id: brand_retailer_product_ids.uniq)
@@ -90,15 +87,12 @@ module Spree
               brand_retailer_product_ids = []
               related_product_ids = Spree::Product.all.in_name_or_description(params[:q]).pluck(:id)
 
-              unless (query = prepare_words(params[:q])) == ['']
-                query.each do |q|
-                  if (brands_retailers = Spree::Taxon.where("name ILIKE ?", "%#{q}%")).present?
-                    brands_retailers.each do |br|
-                      brand_retailer_product_ids.concat(br.products.pluck(:id))
-                    end
-                  end
+              if (brands_retailers = Spree::Taxon.where("name ILIKE ?", "%#{parmas[:q]}%")).present?
+                brands_retailers.each do |br|
+                  brand_retailer_product_ids.concat(br.products.pluck(:id))
                 end
               end
+
               brand_retailer_product_ids = brand_retailer_product_ids.concat(related_product_ids)
 
               brand_retailer_product_ids.blank? ? @products = Spree::Product.all : @products = Spree::Product.where(id: brand_retailer_product_ids.uniq)
@@ -212,14 +206,6 @@ module Spree
           product = Spree::Product.find(params[:id])
           product.punch(request)
           render "spree/api/v1/shared/success", status: 200
-        end
-
-        # Produce an array of keywords for use in scopes.
-        # Always return array with at least an empty string to avoid SQL errors
-        def prepare_words(words)
-          return [''] if words.blank?
-          a = words.split(/[,\s]/).map(&:strip)
-          a.any? ? a : ['']
         end
       end
     end
