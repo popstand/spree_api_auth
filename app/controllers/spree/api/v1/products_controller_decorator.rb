@@ -11,7 +11,7 @@ module Spree
             brand_retailer_product_ids = []
             related_product_ids = Spree::Product.all.in_name_or_description(params[:q]).pluck(:id)
 
-            if (brands_retailers = Spree::Taxon.where("name ILIKE ?", "%#{parmas[:q]}%")).present?
+            if (brands_retailers = Spree::Taxon.where("name ILIKE ?", "%#{params[:q]}%")).present?
               brands_retailers.each do |br|
                 brand_retailer_product_ids.concat(br.products.pluck(:id))
               end
@@ -87,7 +87,7 @@ module Spree
               brand_retailer_product_ids = []
               related_product_ids = Spree::Product.all.in_name_or_description(params[:q]).pluck(:id)
 
-              if (brands_retailers = Spree::Taxon.where("name ILIKE ?", "%#{parmas[:q]}%")).present?
+              if (brands_retailers = Spree::Taxon.where("name ILIKE ?", "%#{params[:q]}%")).present?
                 brands_retailers.each do |br|
                   brand_retailer_product_ids.concat(br.products.pluck(:id))
                 end

@@ -54,6 +54,16 @@ module Spree
           @taxons = @taxons.page(params[:page]).per(params[:per_page])
           respond_with(@taxons)
         end
+
+        def follwed_brands_search
+          if (@taxons = Spree::Taxon.where("name ILIKE ?", "%#{parmas[:q]}%")).present?
+            @current_api_user = current_api_user
+            @taxons = @taxons.page(params[:page]).per(params[:per_page])
+            respond_with(@taxons)
+          else
+            render "spree/api/v1/taxons/no_followed_brands_search_results", :status => 400 and return
+          end
+        end
       end
     end
   end
