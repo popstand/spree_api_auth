@@ -56,7 +56,7 @@ module Spree
         end
 
         def follwed_brands_search
-          if (@taxons = Spree::Taxon.where("name ILIKE ?", "%#{parmas[:q]}%")).present?
+          if (@taxons = Spree::Taxon.where("name ILIKE ?", "%#{params[:q]}%")).present?
             @current_api_user = current_api_user
             @taxons = @taxons.page(params[:page]).per(params[:per_page])
             respond_with(@taxons)
