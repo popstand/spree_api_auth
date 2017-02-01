@@ -8,7 +8,7 @@ module Spree
         def update_preferences
           @user = Spree::User.where(spree_api_key: request.headers['X-Spree-Token']).first
 
-          if @user.update_attribute(:preferences, params[:user][:preferences])
+          if @user.update(preferences: YAML.load(params[:user][:preferences].to_json))
             respond_with(@user, :status => 200, :default_template => :show)
           else
             invalid_resource!(user)
