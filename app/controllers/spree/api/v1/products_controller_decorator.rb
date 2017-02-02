@@ -83,7 +83,9 @@ module Spree
           # we build a collection based on the users set prefernces
           # if user has no preferences set we grab all products
           if params.has_key?(:in_taxons) or params.has_key?(:q)
+            byebug
             if params.has_key?(:q)
+              byebug
               brand_retailer_product_ids = []
               related_product_ids = Spree::Product.all.in_name_or_description(params[:q]).pluck(:id)
 
@@ -104,9 +106,11 @@ module Spree
             end
           else
             if params.has_key?(:gender) or params.has_key?(:price_floor) or params.has_key?(:price_ceiling) or params.has_key?(:option_type) or params.has_key?(:option_value)
+              byebug
               @products = Spree::Product.all.order(created_at: :desc)
             else
               if (selected_sizes = current_api_user.preferences["selected_sizes"]).present?
+                byebug
                 product_ids = []
                 selected_sizes.keys.each do |taxon|
                   selected_sizes[taxon].keys.each do |option_type|
@@ -117,6 +121,7 @@ module Spree
                 end
                 @products = Spree::Product.where(id: product_ids.uniq)
               else
+                byebug
                 case current_api_user.gender
                 when "Female"
                   @products = Spree::Product.in_taxons(8)

@@ -76,19 +76,11 @@ module Spree
         end
 
         def followed_brands_products
-          case current_api_user.gender
-          when "Female"
-            @products = Spree::Product.all_from_brands_followed_by(current_api_user).in_taxons(8)
-          when "Male"
-            @products = Spree::Product.all_from_brands_followed_by(current_api_user).in_taxons(7)
-          else
-            @products = Spree::Product.all_from_brands_followed_by(current_api_user)
-          end
-
+          @products = Spree::Product.all_from_brands_followed_by(current_api_user)
           @products = @products.order(created_at: :desc)
 
           if @products.any?
-            @products = @products.distinct.page(params[:page]).per(params[:per_page])
+            @products = @products.page(params[:page]).per(params[:per_page])
             expires_in 15.minutes, :public => true
             headers['Surrogate-Control'] = "max-age=#{15.minutes}"
 
