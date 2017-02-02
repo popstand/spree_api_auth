@@ -203,7 +203,20 @@ module Spree
         end
 
         def trending
-          @products = Spree::Product.most_hit(1.month.ago, nil)
+          if current_api_user
+            case current_api_user.gender
+            when "Female"
+              @products = Spree::Product.most_hit(1.month.ago, nil).in_taxons(8)
+            when "Male"
+              @products = Spree::Product.most_hit(1.month.ago, nil).in_taxons(7)
+            else
+              @products = Spree::Product.most_hit(1.month.ago, nil)
+            end
+          else
+            @products = Spree::Product.most_hit(1.month.ago, nil)
+          end
+
+          @products = @products.order(created_at: :desc)
           @products = @products.page(params[:page]).per(params[:per_page])
 
           expires_in 15.minutes, :public => true
