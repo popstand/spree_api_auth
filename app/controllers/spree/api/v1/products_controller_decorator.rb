@@ -206,16 +206,18 @@ module Spree
           if current_api_user
             case current_api_user.gender
             when "Female"
-              @products = Spree::Product.most_hit(1.month.ago, nil).in_taxons(8).uniq
+              products = Spree::Product.most_hit(1.month.ago, nil).in_taxons(8).pluck(:id)
+              @products = Spree::Product.where(id: products.uniq)
             when "Male"
-              @products = Spree::Product.most_hit(1.month.ago, nil).in_taxons(7).uniq
+              products = Spree::Product.most_hit(1.month.ago, nil).in_taxons(7).pluck(:id)
+              @products = Spree::Product.where(id: products.uniq)
             else
               @products = Spree::Product.most_hit(1.month.ago, nil)
             end
           else
             @products = Spree::Product.most_hit(1.month.ago, nil)
           end
-
+          
           @products = @products.order(created_at: :desc)
           @products = @products.page(params[:page]).per(params[:per_page])
 
