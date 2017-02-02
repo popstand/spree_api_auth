@@ -19,14 +19,14 @@ module Spree
 
             brand_retailer_product_ids = brand_retailer_product_ids.concat(related_product_ids)
 
-            brand_retailer_product_ids.blank? ? @products = Spree::Product.all.order(created_at: :desc) : @products = Spree::Product.where(id: brand_retailer_product_ids.uniq)
+            brand_retailer_product_ids.blank? ? @products = Spree::Product.all.order(created_at: :desc).uniq : @products = Spree::Product.where(id: brand_retailer_product_ids.uniq)
           else
-            @products = Spree::Product.all.order(created_at: :desc) unless params.has_key?(:in_taxons)
+            @products = Spree::Product.all.order(created_at: :desc).uniq unless params.has_key?(:in_taxons)
           end
 
           if params.has_key?(:in_taxons)
             taxon_ids = params[:in_taxons].split(',').map(&:to_i)
-            @products = params.has_key?(:q) ? @products.in_taxons(taxon_ids) : Spree::Product.all.in_taxons(taxon_ids).order(created_at: :desc)
+            @products = params.has_key?(:q) ? @products.in_taxons(taxon_ids) : Spree::Product.all.in_taxons(taxon_ids).order(created_at: :desc).uniq1
           end
 
           if @products.present?
@@ -95,16 +95,16 @@ module Spree
 
               brand_retailer_product_ids = brand_retailer_product_ids.concat(related_product_ids)
 
-              brand_retailer_product_ids.blank? ? @products = Spree::Product.all.order(created_at: :desc) : @products = Spree::Product.where(id: brand_retailer_product_ids.uniq)
+              brand_retailer_product_ids.blank? ? @products = Spree::Product.all.order(created_at: :desc).uniq : @products = Spree::Product.where(id: brand_retailer_product_ids.uniq)
             end
 
             if params.has_key?(:in_taxons)
               taxon_ids = params[:in_taxons].split(',').map(&:to_i)
-              @products = params.has_key?(:q) ? @products.in_taxons(taxon_ids) : Spree::Product.all.in_taxons(taxon_ids).order(created_at: :desc)
+              @products = params.has_key?(:q) ? @products.in_taxons(taxon_ids) : Spree::Product.all.in_taxons(taxon_ids).order(created_at: :desc).uniq
             end
           else
             if params.has_key?(:gender) or params.has_key?(:price_floor) or params.has_key?(:price_ceiling) or params.has_key?(:option_type) or params.has_key?(:option_value)
-              @products = Spree::Product.all.order(created_at: :desc)
+              @products = Spree::Product.all.order(created_at: :desc).uniq
             else
               if (selected_sizes = current_api_user.preferences["selected_sizes"]).present?
                 product_ids = []
@@ -123,7 +123,7 @@ module Spree
                 when "Male"
                   @products = Spree::Product.in_taxons(7).uniq
                 else
-                  @products = Spree::Product.all
+                  @products = Spree::Product.all.uniq
                 end
               end
 
@@ -217,7 +217,7 @@ module Spree
           else
             @products = Spree::Product.most_hit(1.month.ago, nil)
           end
-          
+
           @products = @products.order(created_at: :desc)
           @products = @products.page(params[:page]).per(params[:per_page])
 
