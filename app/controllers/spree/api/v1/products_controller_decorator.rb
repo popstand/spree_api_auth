@@ -26,10 +26,11 @@ module Spree
 
           if params.has_key?(:in_taxons)
             taxon_ids = params[:in_taxons].split(',').map(&:to_i)
-            @products = params.has_key?(:q) ? @products.in_taxons(taxon_ids) : Spree::Product.all.in_taxons(taxon_ids).order(created_at: :desc).uniq1
+            @products = params.has_key?(:q) ? @products.in_taxons(taxon_ids) : Spree::Product.all.in_taxons(taxon_ids).order(created_at: :desc).uniq
           end
 
           if @products.present?
+            @products = @products.order(created_at: :desc).uniq
             # Filter products by gender
             if params.has_key?(:gender)
               # 7 is the Male parent taxon
@@ -126,12 +127,11 @@ module Spree
                   @products = Spree::Product.all.uniq
                 end
               end
-
-              @products = @products.order(created_at: :desc)
             end
           end
 
           if @products.present?
+            @products = @products.order(created_at: :desc).uniq
             # Filter products by gender
             if params.has_key?(:gender)
               # 7 is the Male parent taxon
