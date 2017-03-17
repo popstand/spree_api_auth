@@ -19,7 +19,11 @@ module Spree
 
             brand_retailer_product_ids = brand_retailer_product_ids.concat(related_product_ids)
 
-            brand_retailer_product_ids.blank? ? @products = Spree::Product.all.order(created_at: :desc).uniq : @products = Spree::Product.where(id: brand_retailer_product_ids.uniq)
+            if brand_retailer_product_ids.blank?
+              @products = Spree::Product.all.order(created_at: :desc).uniq
+            else
+              @products = Spree::Product.where(id: brand_retailer_product_ids.uniq)
+            end
           else
             @products = Spree::Product.all.order(created_at: :desc).uniq unless params.has_key?(:in_taxons)
           end
@@ -54,6 +58,9 @@ module Spree
               @products = @products.with_option_value(params[:option_type], params[:option_value])
             end
           end
+
+          # Only show available (not discontinued) products
+          @products = @products.available
 
           # Pagination
           @products = @products.page(params[:page]).per(params[:per_page])
@@ -155,6 +162,9 @@ module Spree
               @products = @products.with_option_value(params[:option_type], params[:option_value])
             end
           end
+
+          # Don't show discontinued products
+          @products = @products.available
 
           # Pagination
           @products = @products.page(params[:page]).per(params[:per_page])
