@@ -41,7 +41,7 @@ module Spree
           end
 
           @current_api_user = current_api_user
-
+          @taxons = @taxons.page(params[:page]).per(params[:per_page])
           respond_with(@taxons)
         end
 
@@ -51,7 +51,7 @@ module Spree
           end
 
           @current_api_user = nil
-
+          @taxons = @taxons.page(params[:page]).per(params[:per_page])
           respond_with(@taxons)
         end
 
