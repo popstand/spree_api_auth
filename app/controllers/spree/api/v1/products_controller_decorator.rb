@@ -9,7 +9,7 @@ module Spree
         def unauthorized_products
           if params.has_key?(:q)
             brand_retailer_product_ids = []
-            related_product_ids = Spree::Product.all.in_name_or_description(params[:q]).pluck(:id)
+            related_product_ids = Spree::Product.basic_search(params[:q]).select(:id).map(&:id)
 
             if (brands_retailers = Spree::Taxon.where("name ILIKE ?", "%#{params[:q]}%")).present?
               brands_retailers.each do |br|
@@ -93,7 +93,7 @@ module Spree
           if params.has_key?(:in_taxons) or params.has_key?(:q)
             if params.has_key?(:q)
               brand_retailer_product_ids = []
-              related_product_ids = Spree::Product.all.in_name_or_description(params[:q]).pluck(:id)
+              related_product_ids = Spree::Product.basic_search(params[:q]).select(:id).map(&:id)
 
               if (brands_retailers = Spree::Taxon.where("name ILIKE ?", "%#{params[:q]}%")).present?
                 brands_retailers.each do |br|
@@ -103,7 +103,11 @@ module Spree
 
               brand_retailer_product_ids = brand_retailer_product_ids.concat(related_product_ids)
 
-              brand_retailer_product_ids.blank? ? @products = Spree::Product.all.order(created_at: :desc).uniq : @products = Spree::Product.where(id: brand_retailer_product_ids.uniq)
+              if brand_retailer_product_ids.blank?
+                @products = Spree::Product.all.order(created_at: :desc).uniq
+              else
+                @products = Spree::Product.where(id: brand_retailer_product_ids.uniq)
+              end
             end
 
             if params.has_key?(:in_taxons)
