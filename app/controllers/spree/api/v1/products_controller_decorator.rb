@@ -8,22 +8,7 @@ module Spree
         # /api/v1/products/unauthorized/?per_page=12&page=1
         def unauthorized_products
           if params.has_key?(:q)
-            brand_retailer_product_ids = []
-            related_product_ids = Spree::Product.basic_search(params[:q]).select(:id).map(&:id)
-
-            if (brands_retailers = Spree::Taxon.where("name ILIKE ?", "%#{params[:q]}%")).present?
-              brands_retailers.each do |br|
-                brand_retailer_product_ids.concat(br.products.pluck(:id))
-              end
-            end
-
-            brand_retailer_product_ids = brand_retailer_product_ids.concat(related_product_ids)
-
-            if brand_retailer_product_ids.blank?
-              @products = Spree::Product.all.order(created_at: :desc).uniq
-            else
-              @products = Spree::Product.where(id: brand_retailer_product_ids.uniq)
-            end
+            @products = Spree::Product.basic_search(params[:q]).order(created_at: :desc).uniq
           else
             @products = Spree::Product.all.order(created_at: :desc).uniq unless params.has_key?(:in_taxons)
           end
@@ -92,25 +77,8 @@ module Spree
           # if user has no preferences set we grab all products
           if params.has_key?(:in_taxons) or params.has_key?(:q)
             if params.has_key?(:q)
-              brand_retailer_product_ids = []
-              related_product_ids = Spree::Product.basic_search(params[:q]).select(:id).map(&:id)
-
-              if (brands_retailers = Spree::Taxon.where("name ILIKE ?", "%#{params[:q]}%")).present?
-                brands_retailers.each do |br|
-                  brand_retailer_product_ids.concat(br.products.pluck(:id))
-                end
-              end
-
-              brand_retailer_product_ids = brand_retailer_product_ids.concat(related_product_ids)
-
-              if brand_retailer_product_ids.blank?
-                @products = Spree::Product.all.order(created_at: :desc).uniq
-              else
-                @products = Spree::Product.where(id: brand_retailer_product_ids.uniq)
-              end
-            end
-
-            if params.has_key?(:in_taxons)
+              @products = Spree::Product.all.basic_search(params[:q]).order(created_at: :desc).uniq
+            elsif params.has_key?(:in_taxons)
               taxon_ids = params[:in_taxons].split(',').map(&:to_i)
               @products = params.has_key?(:q) ? @products.in_taxons(taxon_ids) : Spree::Product.all.in_taxons(taxon_ids).order(created_at: :desc).uniq
             end
