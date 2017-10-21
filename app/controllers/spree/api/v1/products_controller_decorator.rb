@@ -8,18 +8,12 @@ module Spree
         # /api/v1/products/unauthorized/?per_page=12&page=1
         def unauthorized_products
           if params.has_key?(:q)
-            @products = Spree::Product.basic_search(params[:q])
             taxons = Spree::Taxon.basic_search(params[:q])
             if taxons.length > 0
-              taxon_products = Spree::Product.in_taxons(taxons)
-              if @products.present?
-                @products << taxon_products
-              else
-                @products = taxon_products
-              end
+              @products = Spree::Product.in_taxons(taxons)
+            else
+              @products = Spree::Product.basic_search(params[:q])
             end
-
-            @products = @products.order(created_at: :desc)
           else
             @products = Spree::Product.all.order(created_at: :desc).uniq unless params.has_key?(:in_taxons)
           end
@@ -88,15 +82,11 @@ module Spree
           # if user has no preferences set we grab all products
           if params.has_key?(:in_taxons) or params.has_key?(:q)
             if params.has_key?(:q)
-              @products = Spree::Product.basic_search(params[:q])
               taxons = Spree::Taxon.basic_search(params[:q])
               if taxons.length > 0
-                taxon_products = Spree::Product.in_taxons(taxons)
-                if @products.present?
-                  @products << taxon_products
-                else
-                  @products = taxon_products
-                end
+                @products = Spree::Product.in_taxons(taxons)
+              else
+                @products = Spree::Product.basic_search(params[:q])
               end
 
               @products = @products.order(created_at: :desc)
