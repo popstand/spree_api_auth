@@ -8,18 +8,29 @@ module Spree
         # /api/v1/products/unauthorized/?per_page=12&page=1
         def unauthorized_products
           if params.has_key?(:q)
-            @products = Spree::Product.basic_search(params[:q]).order(created_at: :desc).uniq
+            @products = Spree::Product.basic_search(params[:q])
+            taxons = Spree::Taxon.basic_search(params[:q])
+            if taxons.length > 0
+              taxon_products = Spree::Product.in_taxons(taxons)
+              if @products.present?
+                @products << taxon_products
+              else
+                @products = taxon_products
+              end
+            end
+
+            @products = @products.order(created_at: :desc)
           else
             @products = Spree::Product.all.order(created_at: :desc).uniq unless params.has_key?(:in_taxons)
           end
 
           if params.has_key?(:in_taxons)
             taxon_ids = params[:in_taxons].split(',').map(&:to_i)
-            @products = params.has_key?(:q) ? @products.in_taxons(taxon_ids) : Spree::Product.all.in_taxons(taxon_ids).order(created_at: :desc).uniq
+            @products = params.has_key?(:q) ? @products.in_taxons(taxon_ids) : Spree::Product.all.in_taxons(taxon_ids).order(created_at: :desc)
           end
 
           if @products.present?
-            @products = @products.order(created_at: :desc).uniq
+            @products = @products.order(created_at: :desc)
             # Filter products by gender
             if params.has_key?(:gender)
               # 7 is the Male parent taxon
@@ -77,14 +88,25 @@ module Spree
           # if user has no preferences set we grab all products
           if params.has_key?(:in_taxons) or params.has_key?(:q)
             if params.has_key?(:q)
-              @products = Spree::Product.all.basic_search(params[:q]).order(created_at: :desc).uniq
+              @products = Spree::Product.basic_search(params[:q])
+              taxons = Spree::Taxon.basic_search(params[:q])
+              if taxons.length > 0
+                taxon_products = Spree::Product.in_taxons(taxons)
+                if @products.present?
+                  @products << taxon_products
+                else
+                  @products = taxon_products
+                end
+              end
+
+              @products = @products.order(created_at: :desc)
             elsif params.has_key?(:in_taxons)
               taxon_ids = params[:in_taxons].split(',').map(&:to_i)
-              @products = params.has_key?(:q) ? @products.in_taxons(taxon_ids) : Spree::Product.all.in_taxons(taxon_ids).order(created_at: :desc).uniq
+              @products = params.has_key?(:q) ? @products.in_taxons(taxon_ids) : Spree::Product.all.in_taxons(taxon_ids).order(created_at: :desc)
             end
           else
             if params.has_key?(:gender) or params.has_key?(:price_floor) or params.has_key?(:price_ceiling) or params.has_key?(:option_type) or params.has_key?(:option_value)
-              @products = Spree::Product.all.order(created_at: :desc).uniq
+              @products = Spree::Product.all.order(created_at: :desc)
             else
               if (selected_sizes = current_api_user.preferences["selected_sizes"]).present?
                 product_ids = []
@@ -95,22 +117,22 @@ module Spree
                     end
                   end
                 end
-                @products = Spree::Product.where(id: product_ids.uniq)
+                @products = Spree::Product.where(id: product_ids)
               else
                 case current_api_user.gender
                 when "Female"
-                  @products = Spree::Product.in_taxons(8).uniq
+                  @products = Spree::Product.in_taxons(8)
                 when "Male"
-                  @products = Spree::Product.in_taxons(7).uniq
+                  @products = Spree::Product.in_taxons(7)
                 else
-                  @products = Spree::Product.all.uniq
+                  @products = Spree::Product.all
                 end
               end
             end
           end
 
           if @products.present?
-            @products = @products.order(created_at: :desc).uniq
+            @products = @products.order(created_at: :desc)
             # Filter products by gender
             if params.has_key?(:gender)
               # 7 is the Male parent taxon
